@@ -7,6 +7,13 @@ interface TerminalLine {
   content: string;
 }
 
+const APP_MAP: { [key: string]: { id: string; title: string } } = {
+  'finder': { id: 'finder', title: 'Finder' },
+  'terminal': { id: 'terminal', title: 'Terminal' },
+  'trash': { id: 'trash', title: 'Trash' },
+  'computer': { id: 'computer', title: 'About This Mac' },
+};
+
 const Terminal: React.FC = () => {
   const { fileSystem, openWindow } = useOS();
   const [lines, setLines] = useState<TerminalLine[]>([
@@ -40,14 +47,14 @@ const Terminal: React.FC = () => {
     switch (cmd) {
       case 'help':
         output = `Available commands:
-  ls        - List directory contents
-  cd <dir>  - Change directory
-  pwd       - Print working directory
-  cat <file>- Display file contents
+  ls         - List directory contents
+  cd <dir>   - Change directory
+  pwd        - Print working directory
+  cat <file> - Display file contents
   echo <text> - Display text
-  clear     - Clear terminal
-  open <app>- Open an application (finder, terminal, trash, computer)
-  help      - Show this help message`;
+  clear      - Clear terminal
+  open <app> - Open an application (finder, terminal, trash, computer)
+  help       - Show this help message`;
         break;
 
       case 'ls': {
@@ -127,16 +134,10 @@ const Terminal: React.FC = () => {
           isError = true;
         } else {
           const appName = args[0].toLowerCase();
-          const appMap: { [key: string]: { id: string; title: string } } = {
-            'finder': { id: 'finder', title: 'Finder' },
-            'terminal': { id: 'terminal', title: 'Terminal' },
-            'trash': { id: 'trash', title: 'Trash' },
-            'computer': { id: 'computer', title: 'About This Mac' },
-          };
 
-          if (appMap[appName]) {
-            openWindow(appMap[appName].id, appMap[appName].title);
-            output = `Opening ${appMap[appName].title}...`;
+          if (APP_MAP[appName]) {
+            openWindow(APP_MAP[appName].id, APP_MAP[appName].title);
+            output = `Opening ${APP_MAP[appName].title}...`;
           } else {
             output = `open: unknown application "${appName}"\nAvailable apps: finder, terminal, trash, computer`;
             isError = true;
