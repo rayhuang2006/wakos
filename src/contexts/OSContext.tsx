@@ -111,12 +111,19 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   }, []);
 
   const moveToTrash = useCallback((item: FileSystemItem) => {
+    // This is now handled by the VFS deleteItem function
     setTrash(prev => [...prev, item]);
   }, []);
 
   const emptyTrash = useCallback(() => {
+    // Clear trash from file system
+    const trash = fileSystem.children?.find(c => c.name === '.Trash');
+    if (trash && trash.children) {
+      trash.children = [];
+      setFileSystem({ ...fileSystem });
+    }
     setTrash([]);
-  }, []);
+  }, [fileSystem]);
 
   const value: OSContextType = {
     windows,

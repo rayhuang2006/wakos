@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '../../hooks/useOS';
-import { findItemByPath } from '../../utils/fileSystem';
+import { findItemByPath, createFile, createFolder, deleteItem } from '../../utils/fileSystem';
 
 interface TerminalLine {
   type: 'input' | 'output' | 'error';
@@ -15,14 +15,14 @@ const APP_MAP: { [key: string]: { id: string; title: string } } = {
 };
 
 const Terminal: React.FC = () => {
-  const { fileSystem, openWindow } = useOS();
+  const { fileSystem, openWindow, updateFileSystem } = useOS();
   const [lines, setLines] = useState<TerminalLine[]>([
-    { type: 'output', content: 'Welcome to WakOS Terminal' },
+    { type: 'output', content: 'Welcome to macOS Web Terminal!' },
     { type: 'output', content: 'Type "help" for available commands' },
     { type: 'output', content: '' },
   ]);
   const [currentInput, setCurrentInput] = useState('');
-  const [currentPath, setCurrentPath] = useState('/Home');
+  const [currentPath, setCurrentPath] = useState('/');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,14 +47,17 @@ const Terminal: React.FC = () => {
     switch (cmd) {
       case 'help':
         output = `Available commands:
-  ls         - List directory contents
-  cd <dir>   - Change directory
-  pwd        - Print working directory
-  cat <file> - Display file contents
+  ls          - List directory contents
+  cd <dir>    - Change directory
+  pwd         - Print working directory
+  cat <file>  - Display file contents
   echo <text> - Display text
-  clear      - Clear terminal
-  open <app> - Open an application (finder, terminal, trash, computer)
-  help       - Show this help message`;
+  touch <file>- Create a new file
+  mkdir <dir> - Create a new directory
+  rm <path>   - Move file or directory to Trash
+  clear       - Clear terminal screen
+  open <app>  - Open an application (finder, terminal, trash, computer)
+  help        - Show this help message`;
         break;
 
       case 'ls': {
@@ -77,7 +80,7 @@ const Terminal: React.FC = () => {
 
       case 'cd': {
         if (args.length === 0) {
-          setCurrentPath('/Home');
+          setCurrentPath('/');
           output = '';
         } else {
           const targetPath = args[0];
@@ -89,6 +92,9 @@ const Terminal: React.FC = () => {
             const parts = currentPath.split('/').filter(p => p);
             parts.pop();
             newPath = '/' + parts.join('/');
+            if (newPath === '') newPath = '/';
+          } else if (targetPath === '.') {
+            newPath = currentPath;
           } else if (targetPath.startsWith('/')) {
             newPath = targetPath;
           } else {
@@ -127,6 +133,47 @@ const Terminal: React.FC = () => {
       case 'echo':
         output = args.join(' ');
         break;
+
+      case 'touch': {
+        if (args.length === 0) {
+          output = 'touch: missing file operand';
+          isError = true;
+        } else {
+          const fileName = args[0];
+          const newFS = createFile(fileSystem, currentPath, fileName);
+          updateFileSystem(newFS);
+          output = '';
+        }
+        break;
+      }
+
+      case 'mkdir': {
+        if (args.length === 0) {
+          output = 'mkdir: missing operand';
+          isError = true;
+        } else {
+          const dirName = args[0];
+          const newFS = createFolder(fileSystem, currentPath, dirName);
+          updateFileSystem(newFS);
+          output = '';
+        }
+        break;
+      }
+
+      case 'rm': {
+        if (args.length === 0) {
+          output = 'rm: missing operand';
+          isError = true;
+        } else {
+          const targetPath = args[0];
+          const fullPath = targetPath.startsWith('/') ? targetPath : 
+            (currentPath === '/' ? `/${targetPath}` : `${currentPath}/${targetPath}`);
+          const newFS = deleteItem(fileSystem, fullPath);
+          updateFileSystem(newFS);
+          output = '';
+        }
+        break;
+      }
 
       case 'open': {
         if (args.length === 0) {

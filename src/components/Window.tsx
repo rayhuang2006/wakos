@@ -51,31 +51,31 @@ const Window: React.FC<WindowProps> = ({ window, children }) => {
       enableResizing={!window.isMaximized}
       onMouseDown={() => focusWindow(window.id)}
     >
-      <div className="w-full h-full bg-white/95 backdrop-blur-xl rounded-lg shadow-2xl overflow-hidden flex flex-col border border-gray-300">
+      <div className="w-full h-full bg-gray-200 backdrop-blur-xl rounded-xl shadow-2xl overflow-hidden flex flex-col border border-gray-400">
         {/* Title Bar */}
-        <div className="window-drag-handle h-9 bg-gradient-to-b from-gray-100 to-gray-200 border-b border-gray-300 flex items-center px-3 cursor-move">
+        <div className="window-drag-handle h-7 bg-gradient-to-b from-gray-200 to-gray-300 border-b border-gray-400 flex items-center px-2 cursor-move">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => closeWindow(window.id)}
-              className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors"
+              className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors border border-red-700"
             />
             <button
               onClick={() => minimizeWindow(window.id)}
-              className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors"
+              className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors border border-yellow-700"
             />
             <button
               onClick={() => maximizeWindow(window.id)}
-              className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors"
+              className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors border border-green-700"
             />
           </div>
-          <div className="flex-1 text-center text-sm font-medium text-gray-700">
+          <div className="flex-1 text-center text-xs font-medium text-gray-700">
             {window.title}
           </div>
           <div className="w-14" /> {/* Spacer for centering */}
         </div>
         
         {/* Content */}
-        <div className="flex-1 overflow-hidden bg-white">
+        <div className="flex-1 overflow-hidden bg-gray-50">
           {children}
         </div>
       </div>

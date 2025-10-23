@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes wallpaper-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Custom macOS-style cursors */
+* {
+  cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEwLjAwMyAyLjAwM2wxMS41OTQgMTEuNTk0LTEwLjAwNCAxMC4wMDRjLTIuNzgxIDIuNzgxLTYuMTIgMi41NTYtOC42NTctLjE5Qy0uMDYzIDIxLjQ1Mi0uMzggMTcuNTg3IDIuMDAzIDE0Ljk4bDEwLjAwNC0xMC4wMDRsMi44MjgtMi44Mjl6IiBzdHJva2U9IiMwMDAiLz48cGF0aCBmaWxsPSIjMDAwIiBkPSJNMTAuMDAzIDIuMDAzbDExLjU5NCAxMS41OTQtMTAuMDA0IDEwLjAwNGMtMi43ODEgMi43ODEtNi4xMiAyLjU1Ni04LjY1Ny0uMTlDLjU2NyAyMi4wODItLjAxMyAxOC4yMTcgMi4wMDMgMTQuOTgxbDEwLjAwNC0xMC4wMDR6Ii8+PC9zdmc+"), auto;
+}
+
+button, a, [role="button"], .cursor-pointer {
+  cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTE1LjY1NyAxMy4yODlsLTMuNDg2IDYuNzM0Yy0xLjIzNCAyLjM4OC41MDIgNS4xNzIgMy4wMzEgNS4xNzJoNC40MjJjMi4xNTYgMCAzLjM1My0yLjEyOSAyLjQ4LTMuOTM4TDE3LjYxIDEzLjI4OWwtLjQ3NC0xLjM2NS0xLjQ3OSAxLjM2NXoiIHN0cm9rZT0iIzAwMCIvPjxwYXRoIGZpbGw9IiMwMDAiIGQ9Ik0xNS4xODQgMTEuOTI0bDIuNDI3LTIuNDI3YzEuNTYzLTEuNTYzIDQuMDk1LTEuNTYzIDUuNjU3IDBsMi4xMjEgMi4xMjFjMS41NjMgMS41NjIgMS41NjMgNC4wOTUtLjAwMSA1LjY1N2wtMi40MjYgMi40MjctNC45NS00Ljk1IDIuMTcxLTIuODN6TTE1LjY1NyAxMy4yODlsLTMuNDg2IDYuNzM0Yy0xLjIzNCAyLjM4OC41MDIgNS4xNzIgMy4wMzEgNS4xNzJoNC40MjJjMi4xNTYgMCAzLjM1My0yLjEyOSAyLjQ4LTMuOTM4TDE3LjYxIDEzLjI4OWwtLjQ3NC0xLjM2NXoiLz48L3N2Zz4="), pointer;
+}
+
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
