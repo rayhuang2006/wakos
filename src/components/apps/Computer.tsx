@@ -2,7 +2,6 @@ import React from 'react';
 import { useOS } from '../../hooks/useOS';
 
 interface ComputerItemProps {
-  path: string;
   icon: string;
   name: string;
   onClick: () => void;
@@ -23,8 +22,8 @@ const ComputerItem: React.FC<ComputerItemProps> = ({ icon, name, onClick }) => {
 const Computer: React.FC = () => {
   const { openWindow } = useOS();
 
-  const handleItemClick = (path: string) => {
-    if (path === '/.Trash') {
+  const handleItemClick = (isTrash: boolean) => {
+    if (isTrash) {
       openWindow('trash', 'Trash');
     } else {
       openWindow('finder', 'Finder');
@@ -34,28 +33,24 @@ const Computer: React.FC = () => {
   return (
     <div className="w-full h-full flex flex-wrap content-start bg-white p-8">
       <ComputerItem
-        path="/Documents"
         icon="🗂️"
         name="Documents"
-        onClick={() => handleItemClick('/Documents')}
+        onClick={() => handleItemClick(false)}
       />
       <ComputerItem
-        path="/Downloads"
         icon="📥"
         name="Downloads"
-        onClick={() => handleItemClick('/Downloads')}
+        onClick={() => handleItemClick(false)}
       />
       <ComputerItem
-        path="/Applications"
         icon="🚀"
         name="Applications"
-        onClick={() => handleItemClick('/Applications')}
+        onClick={() => handleItemClick(false)}
       />
       <ComputerItem
-        path="/.Trash"
         icon="🗑️"
         name="Trash"
-        onClick={() => handleItemClick('/.Trash')}
+        onClick={() => handleItemClick(true)}
       />
     </div>
   );
