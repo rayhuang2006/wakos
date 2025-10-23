@@ -1,5 +1,5 @@
 import React from 'react';
-import { useOS } from '../contexts/OSContext';
+import { useOS } from '../hooks/useOS';
 
 interface DockAppProps {
   id: string;

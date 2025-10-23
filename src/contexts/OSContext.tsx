@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useState, useCallback, useEffect } from 'react';
 import type { WindowState, FileSystemItem } from '../types';
 import { initialFileSystem } from '../utils/fileSystem';
 
@@ -18,7 +19,7 @@ interface OSContextType {
   emptyTrash: () => void;
 }
 
-const OSContext = createContext<OSContextType | undefined>(undefined);
+export const OSContext = createContext<OSContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'wakos-state';
 
@@ -134,12 +135,4 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   return <OSContext.Provider value={value}>{children}</OSContext.Provider>;
-};
-
-export const useOS = () => {
-  const context = useContext(OSContext);
-  if (!context) {
-    throw new Error('useOS must be used within OSProvider');
-  }
-  return context;
 };

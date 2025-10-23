@@ -1,5 +1,5 @@
 import React from 'react';
-import { useOS } from '../contexts/OSContext';
+import { useOS } from '../hooks/useOS';
 import Window from './Window';
 import Finder from './apps/Finder';
 import Terminal from './apps/Terminal';

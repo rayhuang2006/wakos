@@ -1,7 +1,7 @@
 import React from 'react';
 import { Rnd } from 'react-rnd';
 import type { WindowState } from '../types';
-import { useOS } from '../contexts/OSContext';
+import { useOS } from '../hooks/useOS';
 
 interface WindowProps {
   window: WindowState;

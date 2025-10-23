@@ -23,7 +23,7 @@ export interface AppConfig {
   id: string;
   name: string;
   icon: string;
-  component: React.ComponentType<any>;
+  component: React.ComponentType<Record<string, never>>;
 }
 
 export interface FileSystemItem {

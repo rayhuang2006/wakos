@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useOS } from '../../contexts/OSContext';
+import { useOS } from '../../hooks/useOS';
 import type { FileSystemItem } from '../../types';
 
 const Finder: React.FC = () => {

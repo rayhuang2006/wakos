@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useOS } from '../../contexts/OSContext';
+import { useOS } from '../../hooks/useOS';
 import { findItemByPath } from '../../utils/fileSystem';
 
 interface TerminalLine {
@@ -49,7 +49,7 @@ const Terminal: React.FC = () => {
   help      - Show this help message`;
         break;
 
-      case 'ls':
+      case 'ls': {
         const currentDir = findItemByPath(fileSystem, currentPath);
         if (currentDir && currentDir.children) {
           output = currentDir.children.map(item => {
@@ -61,12 +61,13 @@ const Terminal: React.FC = () => {
           isError = true;
         }
         break;
+      }
 
       case 'pwd':
         output = currentPath;
         break;
 
-      case 'cd':
+      case 'cd': {
         if (args.length === 0) {
           setCurrentPath('/Home');
           output = '';
@@ -96,8 +97,9 @@ const Terminal: React.FC = () => {
           }
         }
         break;
+      }
 
-      case 'cat':
+      case 'cat': {
         if (args.length === 0) {
           output = 'cat: missing file operand';
           isError = true;
@@ -112,6 +114,7 @@ const Terminal: React.FC = () => {
           }
         }
         break;
+      }
 
       case 'echo':
         output = args.join(' ');
