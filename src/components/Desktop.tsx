@@ -5,7 +5,9 @@ const Desktop: React.FC = () => {
     <div
       className="absolute inset-0 z-0"
       style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(to top right, #6d76cb, #2d2f45, #f5b078, #ea5553)',
+        backgroundSize: '400% 400%',
+        animation: 'wallpaper-gradient 30s ease infinite',
       }}
     />
   );
