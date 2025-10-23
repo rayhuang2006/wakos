@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>macOS Web</title>
+    
+    <style>
+        /* --- Global & Font --- */
+        :root {
+            --title-bar-height: 28px;
+            --dock-height: 50px;
+            --dock-padding: 6px;
+            --menu-bar-height: 24px;
+            --border-radius: 10px;
+            --system-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+            --bg-blur: rgba(255, 255, 255, 0.2);
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: var(--system-font);
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* --- Desktop Environment --- */
+        #desktop {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            /* macOS Sonoma-style wallpaper gradient */
+            background-image: linear-gradient(to top right, #6d76cb, #2d2f45, #f5b078, #ea5553);
+            background-size: 400% 400%;
+            animation: wallpaper-gradient 30s ease infinite;
+            overflow: hidden;
+            /* Cursors */
+            --cursor-default: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEwLjAwMyAyLjAwM2wxMS41OTQgMTEuNTk0LTEwLjAwNCAxMC4wMDRjLTIuNzgxIDIuNzgxLTYuMTIgMi41NTYtOC42NTctLjE5Qy0uMDYzIDIxLjQ1Mi0uMzggMTcuNTg3IDIuMDAzIDE0Ljk4bDEwLjAwNC0xMC4wMDRsMi44MjgtMi44Mjl6IiBzdHJva2U9IiMwMDAiLz48cGF0aCBmaWxsPSIjMDAwIiBkPSJNMTAuMDAzIDIuMDAzbDExLjU5NCAxMS41OTQtMTAuMDA0IDEwLjAwNGMtMi43ODEgMi43ODEtNi4xMiAyLjU1Ni04LjY1Ny0uMTlDLjU2NyAyMi4wODItLjAxMyAxOC4yMTcgMi4wMDMgMTQuOTgxbDEwLjAwNC0xMC4wMDR6Ii8+PC9zdmc+"), auto;
+            --cursor-pointer: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTE1LjY1NyAxMy4yODlsLTMuNDg2IDYuNzM0Yy0xLjIzNCAyLjM4OC41MDIgNS4xNzIgMy4wMzEgNS4xNzJoNC40MjJjMi4xNTYgMCAzLjM1My0yLjEyOSAyLjQ4LTMuOTM4TDE3LjYxIDEzLjI4OWwtLjQ3NC0xLjM2NS0xLjQ3OSAxLjM2NXoiIHN0cm9rZT0iIzAwMCIvPjxwYXRoIGZpbGw9IiMwMDAiIGQ9Ik0xNS4xODQgMTEuOTI0bDIuNDI3LTIuNDI3YzEuNTYzLTEuNTYzIDQuMDk1LTEuNTYzIDUuNjU3IDBsMi4xMjEgMi4xMjFjMS41NjMgMS41NjIgMS41NjMgNC4wOTUtLjAwMSA1LjY1N2wtMi40MjYgMi40MjctNC45NS00Ljk1IDIuMTcxLTIuODN6TTE1LjY1NyAxMy4yODlsLTMuNDg2IDYuNzM0Yy0xLjIzNCAyLjM4OC41MDIgNS4xNzIgMy4wMzEgNS4xNzJoNC40MjJjMi4xNTYgMCAzLjM1My0yLjEyOSAyLjQ4LTMuOTM4TDE3LjYxIDEzLjI4OWwtLjQ3NC0xLjM2NXoiLz48L3N2Zz4="), pointer;
+            cursor: var(--cursor-default);
+        }
+        
+        button, .clickable, .dock-item, .traffic-light, .menu-item, .finder-item, .computer-item {
+            cursor: var(--cursor-pointer);
+        }
+
+        @keyframes wallpaper-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Menu Bar --- */
+        #menu-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--menu-bar-height);
+            background: var(--bg-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px;
+            z-index: 10000;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .menu-left, .menu-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-item {
+            padding: 0 8px;
+            height: var(--menu-bar-height);
+            line-height: var(--menu-bar-height);
+            user-select: none;
+        }
+        
+        .menu-item.apple-logo {
+            font-size: 16px;
+            padding: 0 10px 0 4px;
+        }
+
+        .menu-item.app-name {
+            font-weight: 600;
+        }
+
+        /* --- Dock --- */
+        #dock-container {
+            position: fixed;
+            bottom: 4px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 9000;
+        }
+
+        #dock {
+            display: flex;
+            align-items: flex-end;
+            padding: var(--dock-padding);
+            background: var(--bg-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .dock-item {
+            height: var(--dock-height);
+            width: var(--dock-height);
+            margin: 0 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            transition: transform 0.15s ease-out, margin 0.15s ease-out;
+            transform-origin: bottom;
+            position: relative;
+        }
+        
+        .dock-item .tooltip {
+            position: absolute;
+            bottom: 110%;
+            background: #222;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.1s ease, visibility 0.1s ease;
+            white-space: nowrap;
+        }
+        
+        .dock-item:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dock-item:hover {
+            transform: scale(1.3);
+            margin: 0 10px;
+        }
+        
+        .dock-item:hover + .dock-item {
+            transform: scale(1.15);
+            margin-left: 6px;
+        }
+        
+        #dock .dock-item-prev-hover {
+            transform: scale(1.15);
+            margin-right: 6px;
+        }
+        
+        .dock-item .app-indicator {
+            position: absolute;
+            bottom: 2px;
+            width: 4px;
+            height: 4px;
+            background: #555;
+            border-radius: 50%;
+            display: none; /* Hidden by default */
+        }
+        
+        .dock-item.open .app-indicator {
+            display: block; /* Show when app is open */
+        }
+        
+
+        /* --- Window Manager --- */
+        .window {
+            position: absolute;
+            /* ★ FIX: Increased min-width and min-height */
+            min-width: 300px;
+            min-height: 200px;
+            background: #ececec;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0,0,0,0.15);
+            transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+            opacity: 0;
+            transform: scale(0.95);
+            overflow: hidden; /* Important for rounded corners on content */
+        }
+        
+        .window.maximized {
+            top: var(--menu-bar-height) !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: calc(100% - var(--menu-bar-height) - 4px) !important; /* 4px for dock gap */
+            border-radius: 0;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .window.maximized .resizer {
+            display: none;
+        }
+
+        .window.open {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .title-bar {
+            height: var(--title-bar-height);
+            background: linear-gradient(to bottom, #e8e8e8, #dcdcdc);
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+            border-bottom: 1px solid #bbb;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        
+        .window.active .title-bar {
+            background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+        }
+
+        .title-bar-text {
+            width: 100%;
+            text-align: center;
+            font-weight: 500;
+            color: #333;
+            padding-right: 70px; /* Space for buttons */
+            box-sizing: border-box;
+            cursor: var(--cursor-default);
+        }
+        
+        .window.active .title-bar-text {
+            color: #000;
+        }
+
+        .traffic-lights {
+            display: flex;
+            align-items: center;
+            padding-top: 2px;
+        }
+
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 4px;
+            border: 1px solid rgba(0,0,0,0.2);
+            box-sizing: border-box;
+            background-color: #aaa;
+        }
+        
+        .window.active .btn-close { background-color: #ff5f57; }
+        .window.active .btn-minimize { background-color: #ffbd2e; }
+        .window.active .btn-maximize { background-color: #28c940; }
+
+
+        .window-body {
+            flex-grow: 1;
+            padding: 0;
+            overflow: auto;
+            background: #f8f8f8;
+            height: 100%; /* Fix for flex child overflow */
+        }
+
+        /* --- Window Resizers --- */
+        .resizer {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            z-index: 1;
+        }
+        .resizer-n  { top: -4px; left: 0; right: 0; height: 8px; cursor: ns-resize; }
+        .resizer-ne { top: -4px; right: -4px; cursor: nesw-resize; }
+        .resizer-e  { top: 0; bottom: 0; right: -4px; width: 8px; cursor: ew-resize; }
+        .resizer-se { bottom: -4px; right: -4px; cursor: nwse-resize; }
+        .resizer-s  { bottom: -4px; left: 0; right: 0; height: 8px; cursor: ns-resize; }
+        .resizer-sw { bottom: -4px; left: -4px; cursor: nesw-resize; }
+        .resizer-w  { top: 0; bottom: 0; left: -4px; width: 8px; cursor: ew-resize; }
+        .resizer-nw { top: -4px; left: -4px; cursor: nwse-resize; }
+
+        /* --- App: Terminal --- */
+        .terminal-window {
+            /* ★ FIX: Added height 100% to fill window-body */
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #2b2b2b;
+            color: #f0f0f0;
+            font-family: "Menlo", "Monaco", "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .terminal-output {
+            flex-grow: 1; /* Allow output to grow */
+            overflow-y: auto; /* Add scrollbar */
+            white-space: pre-wrap;
+            word-break: break-all;
+            padding: 8px;
+        }
+        
+        .terminal-line {
+            display: flex;
+            padding: 0 8px 8px 8px; /* Add padding to line */
+            flex-shrink: 0; /* Prevent line from shrinking */
+        }
+
+        .terminal-prompt {
+            color: #87c38a;
+            margin-right: 8px;
+            user-select: none;
+        }
+        
+        .terminal-path {
+            color: #8cbde6;
+            margin-right: 8px;
+            user-select: none;
+        }
+
+        .terminal-input {
+            flex-grow: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: #f0f0f0;
+            font-family: inherit;
+            font-size: inherit;
+            padding: 0;
+        }
+        
+        .terminal-output .cmd-echo {
+            color: #f0f0f0;
+        }
+        .terminal-output .cmd-error {
+            color: #ff6b6b;
+        }
+        .terminal-output .cmd-ls-dir {
+            color: #8cbde6;
+            font-weight: bold;
+        }
+        .terminal-output .cmd-ls-file {
+            color: #f0f0f0;
+        }
+        .terminal-output .cmd-help {
+            color: #c5c5c5;
+            white-space: pre;
+        }
+
+        /* --- App: Finder --- */
+        .finder-window .window-body {
+            display: flex;
+            background: #f8f8f8;
+            flex-direction: column;
+        }
+        
+        .finder-toolbar {
+            display: flex;
+            padding: 6px 12px;
+            border-bottom: 1px solid #ccc;
+            background: #f0f0f0;
+            flex-shrink: 0;
+            align-items: center;
+        }
+        
+        .finder-path-bar {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 12px;
+            color: #333;
+            flex-grow: 1;
+            margin: 0 8px;
+        }
+        
+        .finder-button {
+            background: #fdfdfd;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-right: 4px;
+        }
+        .finder-button:hover {
+            background: #f0f0f0;
+        }
+        .finder-button:active {
+            background: #e0e0e0;
+        }
+
+        .finder-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        
+        .finder-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 5px;
+            user-select: none;
+        }
+        
+        .finder-item.selected {
+            background: #007aff;
+            color: white;
+        }
+        
+        .finder-item-icon {
+            font-size: 18px;
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .finder-item-name {
+            font-size: 13px;
+        }
+        
+        .finder-item-name-input {
+            font-size: 13px;
+            font-family: var(--system-font);
+            border: 1px solid #007aff;
+            border-radius: 3px;
+            padding: 2px 4px;
+            outline: none;
+        }
+        
+        /* --- App: Trash --- */
+        .trash-window .finder-toolbar {
+            justify-content: flex-end;
+        }
+        
+        /* --- App: Computer --- */
+        .computer-window .window-body {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            align-content: flex-start;
+        }
+        
+        .computer-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+            margin: 10px;
+            text-align: center;
+            border-radius: 5px;
+            padding: 8px 4px;
+        }
+        .computer-item:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        .computer-item-icon {
+            font-size: 48px;
+        }
+        .computer-item-name {
+            font-size: 13px;
+            margin-top: 6px;
+            word-break: break-word;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="desktop">
+        </div>
+
+    <div id="menu-bar">
+        <div class="menu-left">
+            <div class="menu-item apple-logo"></div>
+            <div class="menu-item app-name" id="menu-app-name">Finder</div>
+        </div>
+        <div class="menu-right">
+            <div class="menu-item">📶</div>
+            <div class="menu-item">🔋</div>
+            <div class="menu-item" id="menu-clock">...</div>
+        </div>
+    </div>
+
+    <div id="dock-container">
+        <div id="dock">
+            </div>
+    </div>
+
+    <template id="window-template">
+        <div class="window">
+            <div class="title-bar">
+                <div class="traffic-lights">
+                    <div class="traffic-light btn-close" title="Close"></div>
+                    <div class="traffic-light btn-minimize" title="Minimize"></div>
+                    <div class="traffic-light btn-maximize" title="Maximize"></div>
+                </div>
+                <div class="title-bar-text">Window Title</div>
+            </div>
+            <div class="window-body">
+                </div>
+            <div class="resizer resizer-n"></div>
+            <div class="resizer resizer-ne"></div>
+            <div class="resizer resizer-e"></div>
+            <div class="resizer resizer-se"></div>
+            <div class="resizer resizer-s"></div>
+            <div class="resizer resizer-sw"></div>
+            <div class="resizer resizer-w"></div>
+            <div class="resizer resizer-nw"></div>
+        </div>
+    </template>
+    
+    <template id="finder-template">
+        <div class="finder-window">
+            <div class="finder-toolbar">
+                <button class="finder-button" data-action="new-folder" title="New Folder">New Folder</button>
+                <button class="finder-button" data-action="rename" title="Rename">Rename</button>
+                <button class="finder-button" data-action="delete" title="Delete">Delete</button>
+                <span class="finder-path-bar">/</span>
+            </div>
+            <div class="finder-content">
+                </div>
+        </div>
+    </template>
+    
+    <template id="trash-template">
+        <div class="trash-window">
+             <div class="finder-toolbar">
+                <button class="finder-button" data-action="empty-trash" title="Empty Trash">Empty Trash</button>
+            </div>
+            <div class="finder-content">
+                </div>
+        </div>
+    </template>
+
+    <template id="terminal-template">
+        <div class="terminal-window">
+            <div class="terminal-output"></div>
+            <div class="terminal-line">
+                <span class="terminal-prompt">user@macos-web</span><span class="terminal-path">/</span><span class="terminal-prompt">$</span>
+                <input type="text" class="terminal-input" autofocus />
+            </div>
+        </div>
+    </template>
+    
+    <template id="computer-template">
+        <div class="computer-window">
+             <div class="computer-item" data-path="/Documents">
+                <div class="computer-item-icon">🗂️</div>
+                <div class="computer-item-name">Documents</div>
+            </div>
+             <div class="computer-item" data-path="/Downloads">
+                <div class="computer-item-icon">📥</div>
+                <div class="computer-item-name">Downloads</div>
+            </div>
+             <div class="computer-item" data-path="/Applications">
+                <div class="computer-item-icon">🚀</div>
+                <div class="computer-item-name">Applications</div>
+            </div>
+             <div class="computer-item" data-path="/.Trash">
+                <div class="computer-item-icon">🗑️</div>
+                <div class="computer-item-name">Trash</div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        /**
+         * ---------------------------------------------------
+         * VFS (Virtual File System)
+         * Simulates a file system using a JS object and
+         * persists it in localStorage.
+         * ---------------------------------------------------
+         */
+        class VirtualFileSystem {
+            constructor() {
+                this.fs = null;
+                this.load();
+            }
+
+            getDefaultFS() {
+                return {
+                    name: "/",
+                    type: "dir",
+                    children: [
+                        { name: "Documents", type: "dir", children: [
+                            { name: "hello.txt", type: "file", content: "Hello from the web!" }
+                        ] },
+                        { name: "Downloads", type: "dir", children: [] },
+                        { name: "Applications", type: "dir", children: [] },
+                        { name: ".Trash", type: "dir", children: [] },
+                    ]
+                };
+            }
+
+            load() {
+                const savedFS = localStorage.getItem('webos_fs');
+                if (savedFS) {
+                    this.fs = JSON.parse(savedFS);
+                } else {
+                    this.fs = this.getDefaultFS();
+                    this.save();
+                }
+            }
+
+            save() {
+                localStorage.setItem('webos_fs', JSON.stringify(this.fs));
+                // Dispatch event to notify apps (like Trash icon)
+                document.dispatchEvent(new CustomEvent('vfs-update', { detail: { fs: this.fs }}));
+            }
+            
+            // --- Path Helper ---
+            
+            resolvePath(path, context = this.fs) {
+                if (path === '/') return this.fs;
+                
+                let parts = path.split('/').filter(p => p.length > 0);
+                let node = context;
+
+                if (path.startsWith('/')) {
+                    node = this.fs;
+                }
+
+                for (const part of parts) {
+                    if (part === '.') continue;
+                    if (part === '..') {
+                        // This is a simplified '..' handler
+                        // A real one would need parent pointers.
+                        // For now, we'll just go up from root, which isn't quite right
+                        // but good enough for this simulation.
+                        node = this.fs; // simplified
+                        continue;
+                    }
+
+                    if (node.type !== 'dir' || !node.children) {
+                        return null; // Path is invalid
+                    }
+                    
+                    const child = node.children.find(c => c.name === part);
+                    if (!child) {
+                        return null; // Path not found
+                    }
+                    node = child;
+                }
+                return node;
+            }
+            
+            getParentNode(path) {
+                const parts = path.split('/').filter(p => p.length > 0);
+                if (parts.length === 0) return null; // root has no parent
+                if (parts.length === 1) return this.fs; // parent is root
+                
+                const parentPath = '/' + parts.slice(0, -1).join('/');
+                return this.resolvePath(parentPath);
+            }
+
+            // --- VFS API ---
+
+            ls(path) {
+                const node = this.resolvePath(path);
+                if (node && node.type === 'dir') {
+                    return node.children;
+                }
+                return null; // Not a directory or not found
+            }
+
+            cat(path) {
+                const node = this.resolvePath(path);
+                if (node && node.type === 'file') {
+                    return node.content;
+                }
+                return null; // Not a file or not found
+            }
+
+            mkdir(path, name) {
+                const parent = this.resolvePath(path);
+                if (parent && parent.type === 'dir') {
+                    if (parent.children.find(c => c.name === name)) {
+                        return false; // Already exists
+                    }
+                    parent.children.push({ name, type: 'dir', children: [] });
+                    this.save();
+                    return true;
+                }
+                return false;
+            }
+
+            touch(path, name, content = "") {
+                const parent = this.resolvePath(path);
+                if (parent && parent.type === 'dir') {
+                    const existing = parent.children.find(c => c.name === name);
+                    if (existing) {
+                        existing.content = content; // Overwrite
+                    } else {
+                        parent.children.push({ name, type: "file", content });
+                    }
+                    this.save();
+                    return true;
+                }
+                return false;
+            }
+            
+            rm(path) {
+                const parent = this.getParentNode(path);
+                const nodeName = path.split('/').pop();
+                
+                if (parent && parent.type === 'dir') {
+                    const index = parent.children.findIndex(c => c.name === nodeName);
+                    if (index > -1) {
+                        const [node] = parent.children.splice(index, 1);
+                        
+                        // Move to trash instead of deleting
+                        const trash = this.resolvePath('/.Trash');
+                        if (trash && trash.type === 'dir') {
+                            // Prevent name collisions in trash
+                            let newName = node.name;
+                            let counter = 1;
+                            while(trash.children.find(c => c.name === newName)) {
+                                newName = `${node.name} (${counter++})`;
+                            }
+                            node.name = newName;
+                            trash.children.push(node);
+                        }
+                        
+                        this.save();
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            rename(path, newName) {
+                const node = this.resolvePath(path);
+                const parent = this.getParentNode(path);
+                if (node && parent) {
+                    if (parent.children.find(c => c.name === newName)) {
+                        return false; // Name already exists
+                    }
+                    node.name = newName;
+                    this.save();
+                    return true;
+                }
+                return false;
+            }
+            
+            emptyTrash() {
+                const trash = this.resolvePath('/.Trash');
+                if (trash && trash.type === 'dir') {
+                    trash.children = [];
+                    this.save();
+                    return true;
+                }
+                return false;
+            }
+        }
+
+
+        /**
+         * ---------------------------------------------------
+         * WindowManager
+         * Handles creation, drag, resize, and focus of windows.
+         * ---------------------------------------------------
+         */
+        class WindowManager {
+            constructor(desktopEl, menuBarEl, appConfigs) {
+                this.desktop = desktopEl;
+                this.menuBarAppName = menuBarEl.querySelector('#menu-app-name');
+                this.appConfigs = appConfigs;
+                
+                this.windows = new Map(); // Use a Map to store window instances
+                this.zCounter = 100;
+                this.activeWindow = null;
+                this.windowStates = this.loadStates();
+                this.windowTemplate = document.getElementById('window-template');
+            }
+
+            open(appId, ...args) {
+                // If window is already open, just focus it
+                if (this.windows.has(appId) && !this.appConfigs[appId].allowMultiple) {
+                    this.focus(appId);
+                    return;
+                }
+                
+                const config = this.appConfigs[appId];
+                if (!config) return;
+
+                // For apps that allow multiple, generate a unique ID
+                let windowId = appId;
+                if (config.allowMultiple) {
+                    windowId = `${appId}-${Date.now()}`;
+                }
+
+                // Clone template
+                const windowEl = this.windowTemplate.content.firstElementChild.cloneNode(true);
+                windowEl.dataset.windowId = windowId;
+                windowEl.classList.add(`${appId}-instance`); // For styling hooks
+                
+                // Set title
+                windowEl.querySelector('.title-bar-text').textContent = config.name;
+                
+                // Restore or set initial position
+                const savedState = this.windowStates[appId];
+                if (savedState && !config.allowMultiple) {
+                    windowEl.style.left = savedState.x;
+                    windowEl.style.top = savedState.y;
+                    windowEl.style.width = savedState.w;
+                    windowEl.style.height = savedState.h;
+                } else {
+                    const offset = (this.windows.size % 10) * 20;
+                    windowEl.style.left = `${100 + offset}px`;
+                    windowEl.style.top = `${50 + offset}px`;
+                    
+                    // ★ FIX: Set default window size from config
+                    windowEl.style.width = config.defaultWidth || '400px';
+                    windowEl.style.height = config.defaultHeight || '300px';
+                }
+
+                this.desktop.appendChild(windowEl);
+                
+                // Track window state
+                const windowInstance = {
+                    id: windowId,
+                    appId: appId, // Original app ID
+                    element: windowEl,
+                    isMaximized: false,
+                    isMinimized: false,
+                    oldState: {} // To store pre-maximize state
+                };
+                this.windows.set(windowId, windowInstance);
+                
+                // Attach event listeners
+                this.makeDraggable(windowEl.querySelector('.title-bar'), windowEl);
+                this.makeResizable(windowEl);
+                
+                windowEl.querySelector('.btn-close').addEventListener('click', () => this.close(windowId));
+                windowEl.querySelector('.btn-minimize').addEventListener('click', () => this.minimize(windowId));
+                windowEl.querySelector('.btn-maximize').addEventListener('click', () => this.maximize(windowId));
+                windowEl.addEventListener('mousedown', () => this.focus(windowId), true); // Capture phase
+
+                // Initialize app content
+                try {
+                    config.init(windowEl.querySelector('.window-body'), ...args);
+                } catch (e) {
+                    console.error(`Failed to init app ${appId}:`, e);
+                    windowEl.querySelector('.window-body').innerHTML = `<p style="color: red; padding: 10px;">Error loading app: ${e.message}</p>`;
+                }
+
+                // Set initial open state
+                this.focus(windowId);
+                document.querySelector(`.dock-item[data-app-id="${appId}"]`)?.classList.add('open');
+                
+                // Open animation
+                requestAnimationFrame(() => {
+                    windowEl.classList.add('open');
+                });
+            }
+
+            close(windowId) {
+                const windowInstance = this.windows.get(windowId);
+                if (!windowInstance) return;
+
+                windowInstance.element.classList.remove('open');
+                
+                // Wait for animation to finish before removing
+                setTimeout(() => {
+                    windowInstance.element.remove();
+                    this.windows.delete(windowId);
+                    
+                    // Update dock indicator
+                    const appId = windowInstance.appId;
+                    let appStillOpen = false;
+                    for (const [id, win] of this.windows) {
+                        if (win.appId === appId) {
+                            appStillOpen = true;
+                            break;
+                        }
+                    }
+                    if (!appStillOpen) {
+                         document.querySelector(`.dock-item[data-app-id="${appId}"]`)?.classList.remove('open');
+                    }
+                    
+                    // Focus next window or desktop
+                    if (this.activeWindow === windowInstance) {
+                        const otherWindows = Array.from(this.windows.values());
+                        if (otherWindows.length > 0) {
+                            // Focus the window that was active before this one (highest z-index)
+                            otherWindows.sort((a,b) => b.element.style.zIndex - a.element.style.zIndex);
+                            this.focus(otherWindows[0].id);
+                        } else {
+                            this.focus(null); // Focus desktop
+                        }
+                    }
+                }, 150);
+            }
+
+            focus(windowId) {
+                if (this.activeWindow) {
+                    this.activeWindow.element.classList.remove('active');
+                }
+                
+                if (windowId === null) {
+                    // Focusing desktop
+                    this.activeWindow = null;
+                    this.menuBarAppName.textContent = 'Finder'; // Default
+                    return;
+                }
+
+                const windowInstance = this.windows.get(windowId);
+                if (!windowInstance) return;
+
+                this.zCounter++;
+                windowInstance.element.style.zIndex = this.zCounter;
+                windowInstance.element.classList.add('active');
+                this.activeWindow = windowInstance;
+                
+                // Update menu bar
+                const config = this.appConfigs[windowInstance.appId];
+                this.menuBarAppName.textContent = config.name;
+                
+                // Focus the first input if available (e.g., Terminal)
+                windowInstance.element.querySelector('input, textarea')?.focus();
+            }
+
+            minimize(windowId) {
+                const windowInstance = this.windows.get(windowId);
+                if (!windowInstance) return;
+                
+                windowInstance.element.style.display = 'none';
+                windowInstance.isMinimized = true;
+                
+                // Focus next window or desktop
+                if (this.activeWindow === windowInstance) {
+                    const otherWindows = Array.from(this.windows.values()).filter(w => !w.isMinimized);
+                     if (otherWindows.length > 0) {
+                        otherWindows.sort((a,b) => b.element.style.zIndex - a.element.style.zIndex);
+                        this.focus(otherWindows[0].id);
+                    } else {
+                        this.focus(null); // Focus desktop
+                    }
+                }
+            }
+            
+            unminimize(appId) {
+                // Find *any* minimized window for this app
+                let windowToUnminimize = null;
+                for (const [id, win] of this.windows) {
+                    if (win.appId === appId && win.isMinimized) {
+                        windowToUnminimize = win;
+                        break;
+                    }
+                }
+                
+                if (windowToUnminimize) {
+                    windowToUnminimize.element.style.display = 'flex';
+                    windowToUnminimize.isMinimized = false;
+                    this.focus(windowToUnminimize.id);
+                }
+            }
+
+            maximize(windowId) {
+                const windowInstance = this.windows.get(windowId);
+                if (!windowInstance) return;
+
+                const winEl = windowInstance.element;
+                
+                if (windowInstance.isMaximized) {
+                    // Restore
+                    winEl.classList.remove('maximized');
+                    const old = windowInstance.oldState;
+                    winEl.style.left = old.x;
+                    winEl.style.top = old.y;
+                    winEl.style.width = old.w;
+                    winEl.style.height = old.h;
+                    windowInstance.isMaximized = false;
+                } else {
+                    // Maximize
+                    windowInstance.oldState = {
+                        x: winEl.style.left,
+                        y: winEl.style.top,
+                        w: winEl.style.width,
+                        h: winEl.style.height,
+                    };
+                    winEl.classList.add('maximized');
+                    windowInstance.isMaximized = true;
+                }
+            }
+            
+            saveStates() {
+                const states = {};
+                for (const [id, win] of this.windows) {
+                    // Only save state for non-multiple apps
+                    if (!this.appConfigs[win.appId].allowMultiple) {
+                        const rect = win.element.getBoundingClientRect();
+                        const desktopRect = this.desktop.getBoundingClientRect();
+                        
+                        if (!win.isMaximized) {
+                             states[win.appId] = {
+                                x: `${rect.left - desktopRect.left}px`,
+                                y: `${rect.top - desktopRect.top}px`,
+                                w: `${rect.width}px`,
+                                h: `${rect.height}px`
+                            };
+                        } else {
+                            // If maximized, save the old state
+                            states[win.appId] = win.oldState;
+                        }
+                    }
+                }
+                localStorage.setItem('webos_windows', JSON.stringify(states));
+            }
+
+            loadStates() {
+                return JSON.parse(localStorage.getItem('webos_windows') || '{}');
+            }
+            
+            restoreWindows() {
+                // This restores windows that were open on last session
+                // We'll just restore the ones we have saved state for.
+                for (const appId in this.windowStates) {
+                    if (this.appConfigs[appId]) {
+                        this.open(appId);
+                    }
+                }
+            }
+
+            // --- Drag & Resize Logic ---
+
+            makeDraggable(titleBar, windowEl) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+                const dragMouseDown = (e) => {
+                    e = e || window.event;
+                    e.preventDefault();
+                    
+                    const windowInstance = this.windows.get(windowEl.dataset.windowId);
+                    if (windowInstance.isMaximized) return; // Can't drag maximized
+                    
+                    titleBar.style.cursor = 'grabbing';
+
+                    // get the mouse cursor position at startup:
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                };
+
+                const elementDrag = (e) => {
+                    e = e || window.event;
+                    e.preventDefault();
+                    // calculate the new cursor position:
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    // set the element's new position:
+                    windowEl.style.top = (windowEl.offsetTop - pos2) + "px";
+                    windowEl.style.left = (windowEl.offsetLeft - pos1) + "px";
+                };
+
+                const closeDragElement = () => {
+                    // stop moving when mouse button is released:
+                    titleBar.style.cursor = 'unset';
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                    this.saveStates(); // Save state on drag end
+                };
+
+                titleBar.onmousedown = dragMouseDown;
+            }
+            
+            makeResizable(windowEl) {
+                const resizers = windowEl.querySelectorAll('.resizer');
+                let original_w, original_h, original_x, original_y, original_mouse_x, original_mouse_y;
+
+                resizers.forEach(resizer => {
+                    resizer.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        
+                        const windowInstance = this.windows.get(windowEl.dataset.windowId);
+                        if (windowInstance.isMaximized) return;
+
+                        const rect = windowEl.getBoundingClientRect();
+                        original_w = rect.width;
+                        original_h = rect.height;
+                        original_x = rect.left;
+                        original_y = rect.top;
+                        original_mouse_x = e.pageX;
+                        original_mouse_y = e.pageY;
+                        
+                        const currentResizer = e.target;
+
+                        const resize = (e) => {
+                            const width = original_w + (e.pageX - original_mouse_x);
+                            const height = original_h + (e.pageY - original_mouse_y);
+                            
+                            const minW = parseInt(getComputedStyle(windowEl).minWidth);
+                            const minH = parseInt(getComputedStyle(windowEl).minHeight);
+
+                            if (currentResizer.classList.contains('resizer-se')) {
+                                if(width > minW) windowEl.style.width = width + 'px';
+                                if(height > minH) windowEl.style.height = height + 'px';
+                            } else if (currentResizer.classList.contains('resizer-sw')) {
+                                if(height > minH) windowEl.style.height = height + 'px';
+                                if(width > minW) {
+                                    windowEl.style.width = width + 'px';
+                                    windowEl.style.left = original_x + (e.pageX - original_mouse_x) + 'px';
+                                }
+                            } else if (currentResizer.classList.contains('resizer-ne')) {
+                                if(width > minW) windowEl.style.width = width + 'px';
+                                if(height > minH) {
+                                    windowEl.style.height = height + 'px';
+                                    windowEl.style.top = original_y + (e.pageY - original_mouse_y) + 'px';
+                                }
+                            } else if (currentResizer.classList.contains('resizer-nw')) {
+                                if(width > minW) {
+                                    windowEl.style.width = width + 'px';
+                                    windowEl.style.left = original_x + (e.pageX - original_mouse_x) + 'px';
+                                }
+                                if(height > minH) {
+                                    windowEl.style.height = height + 'px';
+                                    windowEl.style.top = original_y + (e.pageY - original_mouse_y) + 'px';
+                                }
+                            } else if (currentResizer.classList.contains('resizer-n')) {
+                                if(height > minH) {
+                                    windowEl.style.height = height + 'px';
+                                    windowEl.style.top = original_y + (e.pageY - original_mouse_y) + 'px';
+                                }
+                            } else if (currentResizer.classList.contains('resizer-s')) {
+                                if(height > minH) windowEl.style.height = height + 'px';
+                            } else if (currentResizer.classList.contains('resizer-e')) {
+                                if(width > minW) windowEl.style.width = width + 'px';
+                            } else if (currentResizer.classList.contains('resizer-w')) {
+                                if(width > minW) {
+                                    windowEl.style.width = width + 'px';
+                                    windowEl.style.left = original_x + (e.pageX - original_mouse_x) + 'px';
+                                }
+                            }
+                        };
+
+                        const stopResize = () => {
+                            window.removeEventListener('mousemove', resize);
+                            window.removeEventListener('mouseup', stopResize);
+                            this.saveStates(); // Save state on resize end
+                        };
+                        
+                        window.addEventListener('mousemove', resize);
+                        window.addEventListener('mouseup', stopResize);
+                    });
+                });
+            }
+        }
+
+
+        /**
+         * ---------------------------------------------------
+         * WebOS (Main Controller)
+         * Initializes and coordinates all components.
+         * ---------------------------------------------------
+         */
+        class WebOS {
+            constructor() {
+                this.vfs = new VirtualFileSystem();
+                this.appConfigs = this.defineAppConfigs();
+                this.wm = new WindowManager(
+                    document.getElementById('desktop'),
+                    document.getElementById('menu-bar'),
+                    this.appConfigs
+                );
+                this.dockEl = document.getElementById('dock');
+            }
+
+            init() {
+                this.initClock();
+                this.initDock();
+                this.wm.restoreWindows();
+                
+                // Save window state on page close
+                window.addEventListener('beforeunload', () => {
+                    this.wm.saveStates();
+                });
+                
+                // Add listener for VFS updates (e.g., trash icon)
+                document.addEventListener('vfs-update', (e) => this.updateTrashIcon(e.detail.fs));
+                this.updateTrashIcon(this.vfs.fs); // Initial check
+            }
+
+            initClock() {
+                const clockEl = document.getElementById('menu-clock');
+                const updateTime = () => {
+                    const now = new Date();
+                    const time = now.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                    clockEl.textContent = time;
+                };
+                updateTime();
+                setInterval(updateTime, 1000);
+            }
+
+            initDock() {
+                const dockApps = ['finder', 'terminal', 'computer', 'trash'];
+                
+                // Clear any existing (e.g. from HMR in dev)
+                this.dockEl.innerHTML = '';
+                
+                for (const appId of dockApps) {
+                    const config = this.appConfigs[appId];
+                    if (!config) continue;
+                    
+                    const dockItem = document.createElement('div');
+                    dockItem.className = 'dock-item';
+                    dockItem.dataset.appId = appId;
+                    dockItem.innerHTML = `
+                        <span class="tooltip">${config.name}</span>
+                        ${config.icon}
+                        <div class="app-indicator"></div>
+                    `;
+                    
+                    dockItem.addEventListener('click', () => {
+                        // Check if a minimized window for this app exists
+                        let minimizedWindow = null;
+                        for(const [id, win] of this.wm.windows) {
+                            if (win.appId === appId && win.isMinimized) {
+                                minimizedWindow = win;
+                                break;
+                            }
+                        }
+                        
+                        if (minimizedWindow) {
+                            this.wm.unminimize(appId);
+                        } else {
+                            this.wm.open(appId);
+                        }
+                    });
+                    
+                    this.dockEl.appendChild(dockItem);
+                }
+                
+                // Dock hover animation logic
+                const dockItems = this.dockEl.querySelectorAll('.dock-item');
+                dockItems.forEach(item => {
+                    item.addEventListener('mouseenter', (e) => {
+                        const prev = e.target.previousElementSibling;
+                        if(prev) prev.classList.add('dock-item-prev-hover');
+                    });
+                     item.addEventListener('mouseleave', (e) => {
+                        const prev = e.target.previousElementSibling;
+                        if(prev) prev.classList.remove('dock-item-prev-hover');
+                    });
+                });
+            }
+            
+            updateTrashIcon(fs) {
+                const trashNode = fs.children.find(c => c.name === '.Trash');
+                const trashIcon = this.dockEl.querySelector('[data-app-id="trash"]');
+                if (!trashIcon) return;
+                
+                if (trashNode && trashNode.children.length > 0) {
+                    trashIcon.innerHTML = `
+                        <span class="tooltip">Trash</span>
+                        ${this.appConfigs.trash.iconFull}
+                        <div class="app-indicator"></div>
+                    `;
+                } else {
+                     trashIcon.innerHTML = `
+                        <span class="tooltip">Trash</span>
+                        ${this.appConfigs.trash.icon}
+                        <div class="app-indicator"></div>
+                    `;
+                }
+                // Re-apply open state class if needed
+                if (this.wm.windows.has('trash')) {
+                    trashIcon.classList.add('open');
+                }
+            }
+
+            /**
+             * ---------------------------------------------------
+             * App Definitions
+             * Each app has an `init` function that builds its UI
+             * inside the window body.
+             * ---------------------------------------------------
+             */
+            defineAppConfigs() {
+                return {
+                    // --- FINDER ---
+                    'finder': {
+                        name: 'Finder',
+                        icon: '🗂️',
+                        allowMultiple: true,
+                        defaultWidth: '500px', // ★ FIX: Added default size
+                        defaultHeight: '350px', // ★ FIX: Added default size
+                        init: (bodyEl, path = '/') => {
+                            const template = document.getElementById('finder-template');
+                            bodyEl.appendChild(template.content.cloneNode(true));
+                            
+                            const state = {
+                                currentPath: path,
+                                selectedItem: null
+                            };
+                            
+                            const contentEl = bodyEl.querySelector('.finder-content');
+                            const pathBar = bodyEl.querySelector('.finder-path-bar');
+                            
+                            const render = () => {
+                                contentEl.innerHTML = '';
+                                pathBar.textContent = state.currentPath;
+                                state.selectedItem = null;
+                                
+                                const items = this.vfs.ls(state.currentPath);
+                                if (!items) {
+                                    contentEl.innerHTML = 'Error: Path not found.';
+                                    return;
+                                }
+                                
+                                // Add '..' navigation
+                                if (state.currentPath !== '/') {
+                                    const parentPath = state.currentPath.split('/').slice(0, -1).join('/') || '/';
+                                    const upEl = document.createElement('div');
+                                    upEl.className = 'finder-item clickable';
+                                    upEl.innerHTML = `<span class="finder-item-icon">⤴️</span> <span class="finder-item-name">..</span>`;
+                                    upEl.addEventListener('dblclick', () => {
+                                        state.currentPath = parentPath;
+                                        render();
+                                    });
+                                    contentEl.appendChild(upEl);
+                                }
+                                
+                                // Sort: dirs first, then files
+                                items.sort((a,b) => {
+                                    if(a.type === b.type) return a.name.localeCompare(b.name);
+                                    return a.type === 'dir' ? -1 : 1;
+                                });
+                                
+                                for (const item of items) {
+                                    const itemEl = document.createElement('div');
+                                    itemEl.className = 'finder-item clickable';
+                                    itemEl.dataset.name = item.name;
+                                    itemEl.innerHTML = `
+                                        <span class="finder-item-icon">${item.type === 'dir' ? '📁' : '📄'}</span>
+                                        <span class="finder-item-name">${item.name}</span>
+                                    `;
+                                    
+                                    // Click to select
+                                    itemEl.addEventListener('click', () => {
+                                        contentEl.querySelectorAll('.finder-item').forEach(el => el.classList.remove('selected'));
+                                        itemEl.classList.add('selected');
+                                        state.selectedItem = item.name;
+                                    });
+                                    
+                                    // Double-click to open
+                                    itemEl.addEventListener('dblclick', () => {
+                                        if (item.type === 'dir') {
+                                            state.currentPath = (state.currentPath === '/' ? '' : state.currentPath) + '/' + item.name;
+                                            render();
+                                        } else {
+                                            // Open file (e.g., in a text editor app)
+                                            // Not implemented, just log for now
+                                            console.log(`Opening file: ${item.name}`);
+                                        }
+                                    });
+                                    
+                                    contentEl.appendChild(itemEl);
+                                }
+                            };
+                            
+                            // Toolbar Actions
+                            bodyEl.querySelector('[data-action="new-folder"]').addEventListener('click', () => {
+                                let name = 'New Folder';
+                                let counter = 1;
+                                while(this.vfs.resolvePath(state.currentPath + '/' + name)) {
+                                    name = `New Folder ${counter++}`;
+                                }
+                                this.vfs.mkdir(state.currentPath, name);
+                                render();
+                            });
+                            
+                            bodyEl.querySelector('[data-action="delete"]').addEventListener('click', () => {
+                                if (!state.selectedItem) return;
+                                if (confirm(`Are you sure you want to move "${state.selectedItem}" to the Trash?`)) {
+                                    this.vfs.rm(state.currentPath + '/' + state.selectedItem);
+                                    render();
+                                }
+                            });
+                            
+                            bodyEl.querySelector('[data-action="rename"]').addEventListener('click', () => {
+                                if (!state.selectedItem) return;
+                                const itemEl = contentEl.querySelector(`.finder-item[data-name="${state.selectedItem}"]`);
+                                const nameEl = itemEl.querySelector('.finder-item-name');
+                                const oldName = state.selectedItem;
+                                
+                                const input = document.createElement('input');
+                                input.type = 'text';
+                                input.className = 'finder-item-name-input';
+                                input.value = oldName;
+                                
+                                nameEl.innerHTML = '';
+                                nameEl.appendChild(input);
+                                input.focus();
+                                input.select();
+                                
+                                const finishRename = () => {
+                                    const newName = input.value;
+                                    if (newName && newName !== oldName) {
+                                        if (this.vfs.rename(state.currentPath + '/' + oldName, newName)) {
+                                            state.selectedItem = newName;
+                                        }
+                                    }
+                                    render(); // Re-render to show new name or revert
+                                };
+                                
+                                input.addEventListener('blur', finishRename);
+                                input.addEventListener('keydown', (e) => {
+                                    if (e.key === 'Enter') input.blur();
+                                    if (e.key === 'Escape') {
+                                        input.value = oldName; // Revert
+                                        input.blur();
+                                    }
+                                });
+                            });
+                            
+                            render();
+                        }
+                    },
+                    
+                    // --- TERMINAL ---
+                    'terminal': {
+                        name: 'Terminal',
+                        icon: '💻',
+                        allowMultiple: true,
+                        defaultWidth: '550px', // ★ FIX: Added default size
+                        defaultHeight: '300px', // ★ FIX: Added default size
+                        init: (bodyEl) => {
+                            const template = document.getElementById('terminal-template');
+                            bodyEl.appendChild(template.content.cloneNode(true));
+                            
+                            // ★ FIX: Get reference to the new root element
+                            const terminalWindowEl = bodyEl.querySelector('.terminal-window');
+                            const outputEl = bodyEl.querySelector('.terminal-output');
+                            const inputEl = bodyEl.querySelector('.terminal-input');
+                            const pathEl = bodyEl.querySelector('.terminal-path');
+                            
+                            const state = {
+                                currentDir: '/',
+                                history: [],
+                                historyIndex: -1
+                            };
+                            
+                            const print = (text, className) => {
+                                const div = document.createElement('div');
+                                div.innerHTML = text; // Use innerHTML to render colors
+                                if (className) div.className = className;
+                                outputEl.appendChild(div);
+                                // Scroll to bottom
+                                outputEl.scrollTop = outputEl.scrollHeight;
+                            };
+                            
+                            const printPrompt = () => {
+                                pathEl.textContent = state.currentDir;
+                            };
+                            
+                            const execute = (cmdLine) => {
+                                if (cmdLine.trim() === '') return;
+                                
+                                state.history.push(cmdLine);
+                                state.historyIndex = state.history.length;
+                                
+                                print(`<span class="terminal-prompt">user@macos-web</span><span class="terminal-path">${state.currentDir}</span><span class="terminal-prompt">$</span> ${cmdLine}`, 'cmd-echo');
+                                
+                                const [cmd, ...args] = cmdLine.trim().split(' ');
+                                
+                                switch(cmd) {
+                                    case 'help':
+                                        print(
+`Available commands:
+  ls          - List directory contents
+  cd <dir>    - Change directory
+  cat <file>  - Show file contents
+  echo ...    - Print arguments
+  touch <file>- Create a new file
+  mkdir <dir> - Create a new directory
+  rm <path>   - Move a file or directory to Trash
+  open <app>  - Open an application (finder, terminal, trash, computer)
+  clear       - Clear the terminal screen
+  help        - Show this help message`, 'cmd-help');
+                                        break;
+                                    case 'clear':
+                                        outputEl.innerHTML = '';
+                                        break;
+                                    case 'echo':
+                                        print(args.join(' '));
+                                        break;
+                                    case 'ls':
+                                        const items = this.vfs.ls(state.currentDir);
+                                        if (items) {
+                                            const out = items.map(i => 
+                                                `<span class="${i.type === 'dir' ? 'cmd-ls-dir' : 'cmd-ls-file'}">${i.name}</span>`
+                                            ).join('  ');
+                                            print(out || '(empty)');
+                                        } else {
+                                            print(`ls: ${state.currentDir}: Not a directory or does not exist`, 'cmd-error');
+                                        }
+                                        break;
+                                    case 'cd':
+                                        const newDir = args[0] || '/';
+                                        let path;
+                                        if (newDir.startsWith('/')) {
+                                            path = newDir;
+                                        } else {
+                                            path = (state.currentDir === '/' ? '' : state.currentDir) + '/' + newDir;
+                                        }
+                                        
+                                        // Simple path resolution (no '..')
+                                        const node = this.vfs.resolvePath(path);
+                                        if (node && node.type === 'dir') {
+                                            state.currentDir = path.replace(/\/+/g, '/') || '/'; // Normalize path
+                                            pathEl.textContent = state.currentDir;
+                                        } else {
+                                            print(`cd: ${newDir}: No such file or directory`, 'cmd-error');
+                                        }
+                                        break;
+                                    case 'cat':
+                                        const catPath = (args[0].startsWith('/') ? '' : (state.currentDir === '/' ? '' : state.currentDir) + '/') + args[0];
+                                        const content = this.vfs.cat(catPath);
+                                        if (content !== null) {
+                                            print(content.replace(/</g, "&lt;").replace(/>/g, "&gt;")); // Sanitize
+                                        } else {
+                                            print(`cat: ${args[0]}: No such file or directory`, 'cmd-error');
+                                        }
+                                        break;
+                                    case 'touch':
+                                        this.vfs.touch(state.currentDir, args[0]);
+                                        break;
+                                    case 'mkdir':
+                                        this.vfs.mkdir(state.currentDir, args[0]);
+                                        break;
+                                    case 'rm':
+                                        const rmPath = (args[0].startsWith('/') ? '' : (state.currentDir === '/' ? '' : state.currentDir) + '/') + args[0];
+                                        if (!this.vfs.rm(rmPath)) {
+                                            print(`rm: ${args[0]}: No such file or directory`, 'cmd-error');
+                                        }
+                                        break;
+                                    case 'open':
+                                        const appId = args[0];
+                                        if (this.appConfigs[appId]) {
+                                            this.wm.open(appId);
+                                        } else {
+                                            print(`open: App not found: ${appId}`, 'cmd-error');
+                                        }
+                                        break;
+                                    default:
+                                        print(`command not found: ${cmd}`, 'cmd-error');
+                                }
+                                
+                                printPrompt();
+                            };
+                            
+                            inputEl.addEventListener('keydown', (e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const cmdLine = inputEl.value;
+                                    inputEl.value = '';
+                                    execute(cmdLine);
+                                } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    if (state.historyIndex > 0) {
+                                        state.historyIndex--;
+                                        inputEl.value = state.history[state.historyIndex];
+                                        inputEl.selectionStart = inputEl.selectionEnd = inputEl.value.length;
+                                    }
+                                } else if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    if (state.historyIndex < state.history.length - 1) {
+                                        state.historyIndex++;
+                                        inputEl.value = state.history[state.historyIndex];
+                                    } else {
+                                        state.historyIndex = state.history.length;
+                                        inputEl.value = '';
+                                    }
+                                }
+                            });
+                            
+                            // ★ FIX: Click listener now targets the whole terminal window
+                            terminalWindowEl.addEventListener('click', (e) => {
+                                // If the click wasn't on the input itself, focus the input.
+                                if (e.target !== inputEl) {
+                                    inputEl.focus();
+                                }
+                            });
+
+                            print('Welcome to macOS Web Terminal!');
+                            print('Type "help" for a list of commands.');
+                            printPrompt();
+                            inputEl.focus();
+                        }
+                    },
+                    
+                    // --- TRASH ---
+                    'trash': {
+                        name: 'Trash',
+                        icon: '🗑️',
+                        iconFull: '🗑️', // We'll update this dynamically
+                        allowMultiple: false,
+                        defaultWidth: '400px', // ★ FIX: Added default size
+                        defaultHeight: '300px', // ★ FIX: Added default size
+                        init: (bodyEl) => {
+                            // Trash is just a specialized Finder window
+                            // We replace the body content with a trash-specific template
+                            const finderTemplate = document.getElementById('finder-template');
+                            const trashTemplate = document.getElementById('trash-template');
+                            
+                            bodyEl.innerHTML = '';
+                            bodyEl.appendChild(trashTemplate.content.cloneNode(true));
+                            
+                            const finderContent = finderTemplate.content.querySelector('.finder-content').cloneNode(true);
+                            bodyEl.appendChild(finderContent);
+                            
+                            const contentEl = bodyEl.querySelector('.finder-content');
+
+                            const render = () => {
+                                // Re-use finder's render logic, but pointed at /.Trash
+                                contentEl.innerHTML = '';
+                                const items = this.vfs.ls('/.Trash');
+                                
+                                if (!items || items.length === 0) {
+                                    contentEl.innerHTML = '<div style="text-align: center; color: #888; padding-top: 20px;">Trash is empty</div>';
+                                    return;
+                                }
+                                
+                                items.sort((a,b) => a.name.localeCompare(b.name));
+                                
+                                for (const item of items) {
+                                    const itemEl = document.createElement('div');
+                                    itemEl.className = 'finder-item';
+                                    itemEl.dataset.name = item.name;
+                                    itemEl.innerHTML = `
+                                        <span class="finder-item-icon">${item.type === 'dir' ? '📁' : '📄'}</span>
+                                        <span class="finder-item-name">${item.name}</span>
+                                    `;
+                                    contentEl.appendChild(itemEl);
+                                }
+                            };
+                            
+                            bodyEl.querySelector('[data-action="empty-trash"]').addEventListener('click', () => {
+                                if (confirm('Are you sure you want to permanently empty the Trash?')) {
+                                    this.vfs.emptyTrash();
+                                    render();
+                                }
+                            });
+                            
+                            // Re-render if VFS changes
+                            document.addEventListener('vfs-update', render);
+                            
+                            render();
+                        }
+                    },
+                    
+                    // --- COMPUTER ---
+                    'computer': {
+                        name: 'Computer',
+                        icon: '🖥️',
+                        allowMultiple: false,
+                        defaultWidth: '350px', // ★ FIX: Added default size
+                        defaultHeight: '400px', // ★ FIX: Added default size
+                        init: (bodyEl) => {
+                            const template = document.getElementById('computer-template');
+                            bodyEl.appendChild(template.content.cloneNode(true));
+                            
+                            bodyEl.querySelectorAll('.computer-item').forEach(item => {
+                                item.addEventListener('dblclick', () => {
+                                    const path = item.dataset.path;
+                                    if (path === '/.Trash') {
+                                        this.wm.open('trash');
+                                    } else {
+                                        this.wm.open('finder', path);
+                                    }
+                                });
+                            });
+                        }
+                    }
+                };
+            }
+        }
+        
+        // --- Boot the OS ---
+        const os = new WebOS();
+        os.init();
+
+    });
+    </script>
+
+</body>
+</html>
