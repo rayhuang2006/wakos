@@ -8,7 +8,7 @@ interface TerminalLine {
 }
 
 const Terminal: React.FC = () => {
-  const { fileSystem } = useOS();
+  const { fileSystem, openWindow } = useOS();
   const [lines, setLines] = useState<TerminalLine[]>([
     { type: 'output', content: 'Welcome to WakOS Terminal' },
     { type: 'output', content: 'Type "help" for available commands' },
@@ -46,6 +46,7 @@ const Terminal: React.FC = () => {
   cat <file>- Display file contents
   echo <text> - Display text
   clear     - Clear terminal
+  open <app>- Open an application (finder, terminal, trash, computer)
   help      - Show this help message`;
         break;
 
@@ -119,6 +120,30 @@ const Terminal: React.FC = () => {
       case 'echo':
         output = args.join(' ');
         break;
+
+      case 'open': {
+        if (args.length === 0) {
+          output = 'open: missing application name';
+          isError = true;
+        } else {
+          const appName = args[0].toLowerCase();
+          const appMap: { [key: string]: { id: string; title: string } } = {
+            'finder': { id: 'finder', title: 'Finder' },
+            'terminal': { id: 'terminal', title: 'Terminal' },
+            'trash': { id: 'trash', title: 'Trash' },
+            'computer': { id: 'computer', title: 'About This Mac' },
+          };
+
+          if (appMap[appName]) {
+            openWindow(appMap[appName].id, appMap[appName].title);
+            output = `Opening ${appMap[appName].title}...`;
+          } else {
+            output = `open: unknown application "${appName}"\nAvailable apps: finder, terminal, trash, computer`;
+            isError = true;
+          }
+        }
+        break;
+      }
 
       case 'clear':
         setLines([]);
